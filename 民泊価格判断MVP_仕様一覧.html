@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>民泊価格判断MVP 仕様一覧</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --text: #17202a;
+      --muted: #64748b;
+      --line: #d9e2ec;
+      --accent: #0f766e;
+      --accent-dark: #12343b;
+      --soft: #eef7f5;
+      --warn: #92400e;
+      --warn-bg: #fef3c7;
+      --ok: #065f46;
+      --ok-bg: #d1fae5;
+      --manual: #475569;
+      --manual-bg: #e2e8f0;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      font-family: "Segoe UI", "Yu Gothic UI", "Hiragino Sans", Meiryo, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.75; }
+    header { background: var(--accent-dark); color: #fff; padding: 26px 32px; border-bottom: 5px solid #2ca58d; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 24px auto 44px; display: grid; gap: 18px; }
+    h1 { margin: 0; font-size: 26px; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 18px; letter-spacing: 0; }
+    p { margin: 0; }
+    code, pre { font-family: Consolas, "SFMono-Regular", monospace; }
+    pre { overflow-x: auto; margin: 10px 0 0; padding: 14px; background: #0f172a; color: #e2e8f0; border-radius: 8px; line-height: 1.55; }
+    section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+    .section-head { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; justify-content: space-between; align-items: center; }
+    .section-body { padding: 18px; display: grid; gap: 14px; }
+    .subtitle { margin-top: 8px; color: #d4e7e4; font-size: 14px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .badge { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .auto { color: var(--ok); background: var(--ok-bg); }
+    .manual { color: var(--manual); background: var(--manual-bg); }
+    .hybrid { color: var(--warn); background: var(--warn-bg); }
+    .note { background: var(--soft); border: 1px solid #bfddd7; border-radius: 8px; padding: 12px 14px; color: #164e49; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fbfdff; }
+    .card strong { display: block; margin-bottom: 6px; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; background: #fff; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #f8fafc; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    .formula { font-size: 15px; font-weight: 800; color: #0f766e; }
+    .muted { color: var(--muted); }
+    .file-path { overflow-wrap: anywhere; }
+
+    @media (max-width: 760px) {
+      header { padding: 22px 20px; }
+      h1 { font-size: 22px; }
+      .grid { grid-template-columns: 1fr; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>民泊価格判断MVP 仕様一覧</h1>
+    <p class="subtitle">共同作業者向けの仕様共有メモ。価格判断・価格反映の半自動化MVPの現行仕様を一覧化しています。</p>
+    <div class="meta">
+      <span class="badge hybrid">半自動MVP</span>
+      <span class="badge auto">一部自動取得</span>
+      <span class="badge manual">人が確認して反映</span>
+      <span class="badge manual">更新日: 2026-05-19</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>1. 目的</h2>
+      </div>
+      <div class="section-body">
+        <p>民泊向けに、日付・地域・イベント・市場価格・予約状況などをもとに推奨価格を算出し、人が確認してAirbnb等へ価格反映するための半自動MVPです。</p>
+        <p class="note">現段階では完全自動反映ではなく、「推奨価格」「値上げ/維持/値下げの判定」「判断理由」「係数の根拠」を出すところまでを主目的にしています。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>2. 対象ファイル</h2>
+      </div>
+      <div class="section-body">
+        <p class="file-path">アプリ本体: I:\マイドライブ\ファイル共有用\依頼案件\株式会社ワンリヒト\価格判断・価格反映の半自動化\sample\民泊価格判断MVP v3.1.html</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>3. 対応エリア</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>エリア</th>
+                <th>初期基準価格</th>
+                <th>想定需要</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>札幌</td><td>12,000円</td><td>雪まつり、夏休み、年末年始、ドーム公演</td></tr>
+              <tr><td>名古屋</td><td>11,000円</td><td>ドーム公演、展示会、連休需要</td></tr>
+              <tr><td>東京</td><td>16,000円</td><td>通年需要が強く、曜日・イベントの上振れは控えめ</td></tr>
+              <tr><td>大阪</td><td>14,000円</td><td>観光、ライブ、展示会、テーマパーク需要</td></tr>
+              <tr><td>福岡</td><td>11,500円</td><td>ドーム公演、連休、アジア圏インバウンド需要</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>4. 入力項目</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>内容</th>
+                <th>扱い</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>エリア</td><td>札幌 / 名古屋 / 東京 / 大阪 / 福岡</td><td><span class="badge manual">選択</span></td></tr>
+              <tr><td>対象日</td><td>価格判断したい宿泊日</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>曜日区分</td><td>平日 / 金曜 / 土曜 / 祝日・連休</td><td><span class="badge auto">自動判定可</span></td></tr>
+              <tr><td>地域イベント</td><td>なし / 小規模 / 大型イベント</td><td><span class="badge manual">選択</span></td></tr>
+              <tr><td>イベント名・根拠メモ</td><td>例: ドーム公演、雪まつり、展示会</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>基準価格</td><td>通常日の基準価格</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>現在価格</td><td>現在Airbnb等に設定している価格</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>最低価格</td><td>推奨価格の下限</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>上限価格</td><td>推奨価格の上限</td><td><span class="badge manual">入力</span></td></tr>
+              <tr><td>ホテル平均価格</td><td>ホテル価格データURLから取得、または手入力</td><td><span class="badge hybrid">半自動</span></td></tr>
+              <tr><td>Airbnb競合価格</td><td>Airbnb競合データURLから取得、または手入力</td><td><span class="badge hybrid">半自動</span></td></tr>
+              <tr><td>予約状況</td><td>低い / 普通 / 高い</td><td><span class="badge manual">選択</span></td></tr>
+              <tr><td>残日数</td><td>対象日までの日数</td><td><span class="badge auto">自動計算</span></td></tr>
+              <tr><td>アクセス集中</td><td>通常 / 増加傾向 / 急増</td><td><span class="badge manual">選択</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>5. 計算式</h2>
+      </div>
+      <div class="section-body">
+        <p class="formula">推奨価格 = 基準価格 × 曜日・祝日係数 × 季節係数 × イベント係数 × 天気係数 × ホテル価格係数 × Airbnb競合係数 × 予約状況係数 × 残日数係数 × アクセス集中係数</p>
+        <p>最後に、最低価格・上限価格の範囲に収めて、500円単位に丸めます。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>6. 自動取得・自動判定</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>現状</th>
+                <th>参照元・方法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>曜日</td><td>対象日から自動判定</td><td>JavaScriptの日付計算</td></tr>
+              <tr><td>祝日</td><td>自動取得</td><td>Holidays JP API、最終確認候補は内閣府祝日資料</td></tr>
+              <tr><td>連休</td><td>自動判定</td><td>祝日 + 土日から判定</td></tr>
+              <tr><td>天気</td><td>自動取得</td><td>Open-Meteo Forecast API</td></tr>
+              <tr><td>残日数</td><td>自動計算</td><td>対象日 - 今日</td></tr>
+              <tr><td>ホテル平均価格</td><td>CSV/JSON URLから取得可能</td><td>Google Sheets公開CSV、自社API、OTA/API連携の受け口</td></tr>
+              <tr><td>Airbnb競合価格</td><td>CSV/JSON URLから取得可能</td><td>PMS、外部データ会社、自社集計APIの受け口</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>7. ホテル/Airbnb価格データ仕様</h2>
+      </div>
+      <div class="section-body">
+        <p>ホテル価格データURL、Airbnb競合データURLは、<code>date</code>、<code>city</code>、<code>price</code> を含むCSVまたはJSONを想定します。対象日・エリアで絞り込み、該当価格の中央値を使います。</p>
+        <div class="grid">
+          <div class="card">
+            <strong>CSV例</strong>
+            <pre>date,city,price,source
+2026-05-19,sapporo,20000,Hotel A
+2026-05-19,sapporo,22000,Hotel B</pre>
+          </div>
+          <div class="card">
+            <strong>JSON例</strong>
+            <pre>[
+  {
+    "date": "2026-05-19",
+    "city": "sapporo",
+    "price": 20000,
+    "source": "Hotel A"
+  }
+]</pre>
+          </div>
+        </div>
+        <p class="note">AirbnbやOTA画面を単体HTMLから直接スクレイピングする設計ではありません。CORS、ログイン、規約、表示変更のリスクを避けるため、公開CSV・自社API・PMS・外部データ会社・定期取得バッチなどを価格データURLとして読み込む方針です。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>8. 出力項目</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>推奨価格</td><td>係数計算後の推奨販売価格</td></tr>
+              <tr><td>保守的レンジ</td><td>信頼スコアに応じた価格帯</td></tr>
+              <tr><td>現在価格との差</td><td>推奨価格 - 現在価格</td></tr>
+              <tr><td>判定</td><td>値上げ推奨 / 維持 / 値下げ推奨</td></tr>
+              <tr><td>理由</td><td>価格判断に影響した要因</td></tr>
+              <tr><td>信頼スコア</td><td>各係数の根拠強度から算出</td></tr>
+              <tr><td>外部データ状態</td><td>祝日、天気、ホテル、Airbnb取得状態</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>9. 係数と根拠表示</h2>
+      </div>
+      <div class="section-body">
+        <p>アプリ画面では、各係数について以下を表示します。</p>
+        <div class="grid">
+          <div class="card"><strong>現在値</strong><span class="muted">例: x1.15</span></div>
+          <div class="card"><strong>根拠データ</strong><span class="muted">例: 価格データURLから2件取得</span></div>
+          <div class="card"><strong>算出方法</strong><span class="muted">例: ホテル平均 ÷ 基準価格</span></div>
+          <div class="card"><strong>信頼度</strong><span class="muted">高 / 中 / 低</span></div>
+          <div class="card"><strong>次の改善</strong><span class="muted">例: 自社予約実績で再推定</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>10. まだMVP扱いの部分</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>現状</th>
+                <th>次の改善候補</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Airbnb/OTA価格</td><td>直接スクレイピングではなくCSV/JSON/API受け口</td><td>PMS、外部データ会社、定期取得バッチ連携</td></tr>
+              <tr><td>イベント情報</td><td>手入力</td><td>イベントCSV登録、公式カレンダー連携</td></tr>
+              <tr><td>予約状況</td><td>選択式</td><td>予約CSV、iCal、PMS読み込み</td></tr>
+              <tr><td>アクセス集中</td><td>手入力</td><td>GA4、問い合わせ数、Googleビジネスプロフィール連携</td></tr>
+              <tr><td>地域別係数</td><td>仮説マスタ</td><td>自社実績、観光庁/e-Stat、自治体統計で再推定</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
